@@ -1,4 +1,4 @@
-import tkinter as tk
+from tkinter import *
 from skimage.io import imread, imshow, imsave
 import cv2 as cv
 import numpy as np
@@ -9,18 +9,20 @@ from scipy.signal import convolve2d
 im = cv.imread('portrait-Donald-Trump.jpg')
 
 
-def resize_im(s):
+def resize_im():
     global im
-    im = rescale(im, s)
+    im = ((rescale(im, w.get(),multichannel=True))*255).astype('uint8')
 
 
 def refresh():
     global im
+    print("refresh")
     im = cv.imread('portrait-Donald-Trump.jpg')
 
 
 # cumulative histogram
 def cumul_hist():
+    global im
     cumul_histo = np.zeros((256,))
     c = 0
     for v in range(256):
@@ -60,16 +62,17 @@ def auto_level():
     lut[:Tmin] = 0
     lut[Tmax:] = 255
     lut[Tmin:Tmax] = (255 / (Tmax - Tmin)) * (lut[Tmin:Tmax] - Tmin)
-    corrected = lut[im]
+    corrected = lut[im].astype('uint8')
     im = corrected
 
 
 # equalization
 def equalization_hist():
+    global im
     ch = cumul_hist()
     ch = (ch * 255).astype('uint8')
     equalized = ch[im]
-    imsave("equalized.png", equalized)
+    im = equalized
 
 
 # kernel mean filter
@@ -98,10 +101,14 @@ def median_filter(ksize):
 
 
 # GUI
-wd = tk.Tk()
-B = tk.Button(wd, text="auto-level", command=auto_level())
-C = tk.Button(wd, text="equalization", command=equalization_hist())
-D = tk.Button(wd, text="refresh", command=refresh())
+wd = Tk()
+B = Button(wd, text="auto-level", command=auto_level)
+C = Button(wd, text="equalization", command=equalization_hist)
+D = Button(wd, text="refresh", command=refresh)
+w = Scale(wd, from_=0, to=2, orient=HORIZONTAL,resolution=0.1)
+G = Button(wd, text="Apply rescale", command=resize_im)
+w.pack()
+G.pack()
 D.pack()
 C.pack()
 B.pack()
@@ -110,4 +117,4 @@ while 1:
     wd.update_idletasks()
     wd.update()
     cv.imshow('Image', im)
-    cv.waitKey(1)
+    cv.waitKey(20)
