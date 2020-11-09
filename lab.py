@@ -92,11 +92,30 @@ def luminosity(inc):
     img_thres = im
     level = 10
     if inc:
-        img_thres[im > 255 - level] = 255 - level # loss of information
+        img_thres[im > 255 - level] = 255 - level  # loss of information
         im = im + level
     else:
-        img_thres[im < 0 + level] = 0 + level # loss of information
+        img_thres[im < level] = level  # loss of information
         im = im - level
+
+
+def sat(inc):
+    global im
+    img = cv.cvtColor(im, cv.COLOR_RGB2HSV)
+    h, s, v = cv.split(img)
+    img_thresh = s
+    level = 20
+    if inc:
+        img_thresh[s > 255 - level] = 255 - level
+        s = s + level
+    else:
+        img_thresh[s < level] = level  # loss of information
+        s = s - level
+    img = cv.merge((h, s, v))
+    img = cv.cvtColor(img, cv.COLOR_HSV2RGB)
+    im = img
+    cv.imwrite("test sat.png", im)
+
 
 
 # kernel mean filter
@@ -152,6 +171,10 @@ lump = Button(wd, text="increase luminosity", command=lambda: luminosity(True), 
 lump.pack()
 lumm = Button(wd, text="reduce luminosity", command=lambda: luminosity(False), bg='green')
 lumm.pack()
+satp = Button(wd, text="increase saturation", command=lambda: sat(True), bg='green')
+satp.pack()
+satm = Button(wd, text="reduce saturation", command=lambda: sat(False), bg='green')
+satm.pack()
 w = Scale(wd, from_=0, to=2, orient=HORIZONTAL, resolution=0.1)
 w.pack()
 G = Button(wd, text="Apply rescale", command=resize_im, bg='yellow')
@@ -166,4 +189,6 @@ while 1:
     wd.update_idletasks()
     wd.update()
     cv.imshow('Image', im)
-    cv.waitKey(20)
+    k = cv.waitKey(20) & 0xFF
+    if k == ord('q'):  # quitter
+        break
