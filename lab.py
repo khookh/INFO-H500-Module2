@@ -3,20 +3,20 @@ from tkinter import *
 from tkinter.ttk import Separator
 import cv2 as cv
 import numpy as np
+import matplotlib.pyplot as plt
 from skimage.transform import rescale
 from scipy.signal import convolve2d
 
 im = cv.imread('portrait-Donald-Trump.jpg')
+lum_level = 0
 
 
 def save():
     count = 0
-    string_name = 'modified.jpg'
-    while os.path.isfile(string_name) is True:
+    while os.path.isfile('modified%d.png' % count) is True:
         count += 1
-        string_name = 'modified%d.jpg' % count
-    cv.imwrite('modified%d.jpg' % count, im)
-    print('modified%d.jpg' % count)
+    cv.imwrite('modified%d.png' % count, im)
+    print('modified%d.png' % count)
 
 
 def resize_im():
@@ -87,6 +87,18 @@ def equalization_hist():
     im = equalized
 
 
+def luminosity(inc):
+    global im, lum_level
+    img_thres = im
+    level = 10
+    if inc:
+        img_thres[im > 255 - level] = 255 - level # loss of information
+        im = im + level
+    else:
+        img_thres[im < 0 + level] = 0 + level # loss of information
+        im = im - level
+
+
 # kernel mean filter
 def mean_filter():
     try:
@@ -122,29 +134,32 @@ def median_filter():
 
 # GUI
 wd = Tk()
-ksize_label = Label(wd, text="Kernel Size")
+ksize_label = Label(wd, text="Kernel Size (default = 3)", bg='red')
 ksize_label.pack()
-ksize_in = Entry(wd)
+ksize_in = Entry(wd, bg='red')
 ksize_in.pack()
-b_mean = Button(wd, text="mean filter", command=mean_filter)
+b_mean = Button(wd, text="mean filter", command=mean_filter, bg='red')
 b_mean.pack()
-b_median = Button(wd, text="median filter", command=median_filter)
+b_median = Button(wd, text="median filter", command=median_filter, bg='red')
 b_median.pack()
 sep = Separator(wd)
 sep.pack()
-B = Button(wd, text="auto-level", command=auto_level)
+B = Button(wd, text="auto-level", command=auto_level, bg='green')
 B.pack()
-C = Button(wd, text="equalization", command=equalization_hist)
+C = Button(wd, text="equalization", command=equalization_hist, bg='green')
 C.pack()
-D = Button(wd, text="refresh", command=refresh)
-D.pack()
-
+lump = Button(wd, text="increase luminosity", command=lambda: luminosity(True), bg='green')
+lump.pack()
+lumm = Button(wd, text="reduce luminosity", command=lambda: luminosity(False), bg='green')
+lumm.pack()
 w = Scale(wd, from_=0, to=2, orient=HORIZONTAL, resolution=0.1)
 w.pack()
-G = Button(wd, text="Apply rescale", command=resize_im)
+G = Button(wd, text="Apply rescale", command=resize_im, bg='yellow')
 G.pack()
-S = Button(wd, text="Save", command=save)
+S = Button(wd, text="Save", command=save, bg='yellow')
 S.pack()
+D = Button(wd, text="Reload", command=refresh, bg='yellow')
+D.pack()
 cv.namedWindow('Image')
 
 while 1:
