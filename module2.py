@@ -163,7 +163,7 @@ def max_filter():
         if i % 100 == 0: print(".", end="")
         for j in range(ksize // 2, im.shape[1] - ksize // 2):
             for dim in range(im.shape[2]):
-                output[i, j, dim] = np.min(im[i - ksize // 2:i + ksize // 2, j - ksize // 2:j + ksize // 2, dim])
+                output[i, j, dim] = np.max(im[i - ksize // 2:i + ksize // 2, j - ksize // 2:j + ksize // 2, dim])
     print("max filter applied succesfully")
     im = output.astype('uint8')
 
@@ -181,7 +181,7 @@ def min_filter():
         if i % 100 == 0: print(".", end="")
         for j in range(ksize // 2, im.shape[1] - ksize // 2):
             for dim in range(im.shape[2]):
-                output[i, j, dim] = np.max(im[i - ksize // 2:i + ksize // 2, j - ksize // 2:j + ksize // 2, dim])
+                output[i, j, dim] = np.min(im[i - ksize // 2:i + ksize // 2, j - ksize // 2:j + ksize // 2, dim])
     print("min filter applied succesfully")
     im = output.astype('uint8')
 
