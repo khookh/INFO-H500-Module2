@@ -1,14 +1,14 @@
+#!/usr/bin/python
+
 import os.path
 from tkinter import *
 from tkinter.ttk import Separator
 import cv2 as cv
 import numpy as np
-import matplotlib.pyplot as plt
 from skimage.transform import rescale
 from scipy.signal import convolve2d
 
-im = cv.imread('portrait-Donald-Trump.jpg')
-lum_level = 0
+im = cv.imread(str(sys.argv[1]))
 
 
 def save():
@@ -27,7 +27,7 @@ def resize_im():
 
 def refresh():
     global im
-    temp = cv.imread('portrait-Donald-Trump.jpg')
+    temp = cv.imread('etretat.jpg')
     if w.get() == 0:
         size = 1
     else:
@@ -54,7 +54,7 @@ def neg_img():
     for i in range(256):
         array.append(255 - i)
     lut = np.array(array)
-    new_img = lut[im]
+    new_img = lut[im].astype('uint8')
     im = new_img
 
 
@@ -88,7 +88,7 @@ def equalization_hist():
 
 
 def luminosity(inc):
-    global im, lum_level
+    global im
     img_thres = im
     level = 10
     if inc:
@@ -106,7 +106,7 @@ def sat(inc):
     img_thresh = s
     level = 20
     if inc:
-        img_thresh[s > 255 - level] = 255 - level
+        img_thresh[s > 255 - level] = 255 - level  # loss of information
         s = s + level
     else:
         img_thresh[s < level] = level  # loss of information
@@ -115,7 +115,6 @@ def sat(inc):
     img = cv.cvtColor(img, cv.COLOR_HSV2RGB)
     im = img
     cv.imwrite("test sat.png", im)
-
 
 
 # kernel mean filter
@@ -151,6 +150,42 @@ def median_filter():
     im = output.astype('uint8')
 
 
+# kernel max filter
+def max_filter():
+    try:
+        ksize = int(ksize_in.get())
+    except:
+        ksize = 3
+    global im
+    output = np.zeros(im.shape)
+    print("processing.", end="")
+    for i in range(ksize // 2, im.shape[0] - ksize // 2):
+        if i % 100 == 0: print(".", end="")
+        for j in range(ksize // 2, im.shape[1] - ksize // 2):
+            for dim in range(im.shape[2]):
+                output[i, j, dim] = np.min(im[i - ksize // 2:i + ksize // 2, j - ksize // 2:j + ksize // 2, dim])
+    print("max filter applied succesfully")
+    im = output.astype('uint8')
+
+
+# kernel min filter
+def min_filter():
+    try:
+        ksize = int(ksize_in.get())
+    except:
+        ksize = 3
+    global im
+    output = np.zeros(im.shape)
+    print("processing.", end="")
+    for i in range(ksize // 2, im.shape[0] - ksize // 2):
+        if i % 100 == 0: print(".", end="")
+        for j in range(ksize // 2, im.shape[1] - ksize // 2):
+            for dim in range(im.shape[2]):
+                output[i, j, dim] = np.max(im[i - ksize // 2:i + ksize // 2, j - ksize // 2:j + ksize // 2, dim])
+    print("min filter applied succesfully")
+    im = output.astype('uint8')
+
+
 # GUI
 wd = Tk()
 ksize_label = Label(wd, text="Kernel Size (default = 3)", bg='red')
@@ -161,12 +196,18 @@ b_mean = Button(wd, text="mean filter", command=mean_filter, bg='red')
 b_mean.pack()
 b_median = Button(wd, text="median filter", command=median_filter, bg='red')
 b_median.pack()
+b_max = Button(wd, text="max filter", command=max_filter, bg='red')
+b_max.pack()
+b_min = Button(wd, text="min filter", command=min_filter, bg='red')
+b_min.pack()
 sep = Separator(wd)
 sep.pack()
 B = Button(wd, text="auto-level", command=auto_level, bg='green')
 B.pack()
 C = Button(wd, text="equalization", command=equalization_hist, bg='green')
 C.pack()
+inv = Button(wd, text="inversion", command=neg_img, bg='green')
+inv.pack()
 lump = Button(wd, text="increase luminosity", command=lambda: luminosity(True), bg='green')
 lump.pack()
 lumm = Button(wd, text="reduce luminosity", command=lambda: luminosity(False), bg='green')
